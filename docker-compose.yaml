@@ -1,7 +1,7 @@
 version: "3.3"
 services:
   dispatcher:
-    image: gcr.io/diffgram-open-core/local_dispatcher:latest
+    image: nexus.oigit.cn/diffgram/local_dispatcher:latest
     ports:
     - "0.0.0.0:8085:8085"
     expose: [8085]
@@ -12,14 +12,14 @@ services:
     environment:
       SAME_HOST: ${SAME_HOST}
   frontend:
-    image: gcr.io/diffgram-open-core/frontend:${DIFFGRAM_VERSION_TAG}
+    image: nexus.oigit.cn/diffgram/frontend:${DIFFGRAM_VERSION_TAG}
     ports:
     - "0.0.0.0:8081:80"
     expose: [80]
     depends_on:
     - default
   walrus:
-    image: gcr.io/diffgram-open-core/walrus:${DIFFGRAM_VERSION_TAG}
+    image: nexus.oigit.cn/diffgram/walrus:${DIFFGRAM_VERSION_TAG}
     ports:
     - "0.0.0.0:8082:8082"
     expose: [8082]
@@ -59,7 +59,7 @@ services:
     entrypoint: ["python3", "-u", "/app/main.py"]
 
   default:
-    image: gcr.io/diffgram-open-core/default:${DIFFGRAM_VERSION_TAG}
+    image: nexus.oigit.cn/diffgram/default:${DIFFGRAM_VERSION_TAG}
     ports:
     - "0.0.0.0:8080:8080"
     expose: [8080]
@@ -99,7 +99,7 @@ services:
       DIFFGRAM_HOST_OS: ${DIFFGRAM_HOST_OS}
       DIFFGRAM_ERROR_SEND_TRACES_IN_RESPONSE: ${DIFFGRAM_ERROR_SEND_TRACES_IN_RESPONSE}
       DIFFGRAM_SERVICE_NAME: ${DIFFGRAM_SERVICE_NAME}
-    command: ["/app/db-init.sh", "${DATABASE_HOST}", "python3", "-u", "/app/main.py"]
+    command: ["python3", "-u", "/app/main.py"]
   db:
     image: ${POSTGRES_IMAGE}
     hostname: db
@@ -109,9 +109,10 @@ services:
     - POSTGRES_DB=diffgram
     volumes:
     # Default INTERNAL_POSTGRES_DIR=/var/lib/postgresql/data:Z
-    - ${POSTGRES_DATA_DIR:-./postgres-data}:${INTERNAL_POSTGRES_DIR:-/var/lib/postgresql/data}
+    - postgres-data-diffgram:${INTERNAL_POSTGRES_DIR:-/var/lib/postgresql/data}
     ports:
     - 5432:5432
 
 volumes:
   static: {}
+  postgres-data-diffgram: {}

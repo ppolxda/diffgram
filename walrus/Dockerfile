@@ -4,6 +4,10 @@ LABEL python_version=python3.7.2
 # Set virtualenv environment variables. This is equivalent to running
 # source /env/bin/activate
 
+RUN apt-get install -y wget
+RUN wget http://cn.archive.ubuntu.com/ubuntu/pool/main/c/ca-certificates/ca-certificates_20211016_all.deb
+RUN dpkg -i ./ca-certificates_20211016_all.deb
+RUN printf "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse\ndeb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse\ndeb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse\ndeb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse\ndeb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse" > /etc/apt/sources.list
 
 RUN apt-get update -y
 RUN apt-get install -y software-properties-common
@@ -21,13 +25,13 @@ RUN apt-get -y install libxml2-dev libxslt1-dev python-dev
 RUN mv /usr/local/lib/libxml2* ~
 ADD walrus/requirements.txt /app/
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2
-RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN python3.7 --version
 RUN python3 --version
 RUN pip install lxml
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
-RUN pip3 install -r /app/requirements.txt
+RUN pip3 install -r /app/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 ADD walrus/ /app/
 ADD shared /app/shared
@@ -38,5 +42,14 @@ ENV PYTHONPATH=/app
 ENV NEW_RELIC_CONFIG_FILE=/app/newrelic.ini
 #CMD exec gunicorn --bind :$PORT --timeout 120 --worker-class eventlet --workers 3 --no-sendfile --config python:my_conf main:app
 EXPOSE 8080
+
+# NLP解压模型,host 追加是 K8S无法域名解析
+RUN apt-get install -yq unzip
+# RUN python3 -m nltk.downloader punkt
+COPY ./depends/nltk_data /root/nltk_data
+RUN unzip /root/nltk_data/corpora/stopwords.zip -d /root/nltk_data/corpora/ && \
+    unzip /root/nltk_data/corpora/wordnet.zip -d /root/nltk_data/corpora/ && \
+    unzip /root/nltk_data/tokenizers/punkt.zip -d /root/nltk_data/tokenizers/
+# RUN echo "185.199.108.133 raw.githubusercontent.com"  >> /etc/hosts
 
 ENTRYPOINT gunicorn --bind :8080 --timeout 120 --worker-class sync --workers 5 --no-sendfile main:app

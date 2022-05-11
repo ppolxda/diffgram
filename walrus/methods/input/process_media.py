@@ -137,6 +137,9 @@ def start_queue_check_loop(VIDEO_QUEUE, FRAME_QUEUE):
 
 
 def check_and_wait_for_memory(memory_limit_float = 75.0, check_interval = 5):
+    if settings.PROCESS_NOT_CHECK_MEMERY:
+        return True
+
     while True:
         if is_memory_available(memory_limit_float = memory_limit_float):
             return True
