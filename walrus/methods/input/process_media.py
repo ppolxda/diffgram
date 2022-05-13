@@ -1831,7 +1831,8 @@ class Process_Media():
 
     def save_raw_image_file(self):
 
-        self.new_image.url_signed_expiry = int(time.time() + 2592000)  # 1 month
+        blob_expiry_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
+        self.new_image.url_signed_expiry = int(time.time() + blob_expiry_offset)
 
         self.new_image.url_signed_blob_path = settings.PROJECT_IMAGES_BASE_DIR + \
                                               str(self.project_id) + "/" + str(self.new_image.id)
@@ -1869,7 +1870,7 @@ class Process_Media():
             )
 
             self.new_image.url_signed = data_tools.build_secure_url(self.new_image.url_signed_blob_path,
-                                                                    self.new_image.url_signed_expiry)
+                                                                    blob_expiry_offset)
         except Exception as e:
             message = f'Error uploading to cloud storage: {traceback.format_exc()}'
             logger.error(message)
@@ -1886,6 +1887,7 @@ class Process_Media():
 
         word_tokens = tokenizer.tokenize_words(raw_text)
         sentences_tokens = tokenizer.tokenize_sentences(raw_text)
+        blob_expiry_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
 
         json_data = {
             file.text_tokenizer: {
@@ -1903,11 +1905,11 @@ class Process_Media():
                                       content_type = 'application/json')
         self.new_text_file.tokens_url_signed = data_tools.build_secure_url(
             self.new_text_file.tokens_url_signed_blob_path,
-            self.new_text_file.tokens_url_signed_expiry)
+            blob_expiry_offset)
         logger.info(f"Saved Tokens on: {self.new_text_file.tokens_url_signed_blob_path}")
 
     def save_raw_text_file(self):
-        offset = 2592000
+        offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
         self.new_text_file.url_signed_expiry = int(time.time() + offset)  # 1 month
 
         self.new_text_file.url_signed_blob_path = '{}{}/{}'.format(settings.PROJECT_TEXT_FILES_BASE_DIR,
@@ -1944,9 +1946,9 @@ class Process_Media():
         imwrite(new_temp_filename, thumbnail_image, quality = 95)
 
         # Build URL
+        blob_expiry_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
         url_signed_thumb = data_tools.build_secure_url(self.new_image.url_signed_thumb_blob_path,
-                                                       self.new_image.url_signed_expiry)
-
+                                                       blob_expiry_offset)
         self.new_image.url_signed_thumb = url_signed_thumb
 
         data_tools.upload_to_cloud_storage(

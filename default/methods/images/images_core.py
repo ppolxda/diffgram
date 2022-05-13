@@ -70,8 +70,8 @@ def process_profile_image(session,
                                     (shape_x, shape_y))
         new_image = get_and_set_width_and_height(new_image, image)
 
-    blob_expiry_offset = 25920000
-    user.profile_image_expiry = int(time.time() + blob_expiry_offset)  # 10 months
+    blob_expiry_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
+    user.profile_image_expiry = int(time.time() + blob_expiry_offset)
 
     # Save File
     temp = tempfile.mkdtemp()
@@ -129,7 +129,7 @@ def process_image_generic(session,
     """
     new_image = Image(original_filename=file_name)
     session.add(new_image)
-    blob_expiry_offset = 45920000
+    blob_expiry_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
     try:
         session.commit()
     except:
@@ -188,7 +188,7 @@ def process_image_generic(session,
     new_image.url_signed_thumb = signed_url_thumb
     new_image.url_signed_thumb_blob_path = image_blob_thumb
 
-    new_image.url_signed_expiry = blob_expiry_offset
+    new_image.url_signed_expiry = int(time.time() + blob_expiry_offset)
 
     return new_image
 

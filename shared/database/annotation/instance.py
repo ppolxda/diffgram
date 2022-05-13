@@ -8,6 +8,9 @@ from sqlalchemy.schema import Index
 from shared.database.model.model import Model
 from shared.database.model.model_run import ModelRun
 from shared.shared_logger import get_shared_logger
+from shared.settings import settings
+
+
 logger = get_shared_logger()
 
 
@@ -574,7 +577,10 @@ class Instance(Base):
                 self.preview_image_url_expiry <= time.time():
 
                 try:
-                    self.preview_image_url = data_tools.build_secure_url(self.preview_image_blob_dir)
+                    self.preview_image_url = data_tools.build_secure_url(
+                        self.preview_image_blob_dir,
+                        expiration_offset=settings.DIFFGRAM_S3_EXPIRATION_OFFSET,
+                    )
                     self.preview_image_url_expiry = time.time() + 2591000
                     session.add(self)
                 except:

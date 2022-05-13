@@ -37,6 +37,7 @@ class DataToolsS3:
 
         self.s3_bucket_name = settings.DIFFGRAM_S3_BUCKET_NAME
         self.s3_bucket_name_ml = settings.ML__DIFFGRAM_S3_BUCKET_NAME
+        self.s3_expiration_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
 
     def create_resumable_upload_session(
         self,
@@ -231,7 +232,7 @@ class DataToolsS3:
         """
 
         if expiration_offset is None:
-            expiration_offset = 40368000
+            expiration_offset = self.s3_expiration_offset
 
         expiration_time = expiration_offset
 
@@ -272,13 +273,13 @@ class DataToolsS3:
         :param image: the Diffgram Image() object
         :return: None
         """
-        image.url_signed_expiry = int(time.time() + 2592000)
+        image.url_signed_expiry = int(time.time() + self.s3_expiration_offset)
 
-        image.url_signed = self.build_secure_url(image.url_signed_blob_path, expiration_offset = 2592000)
+        image.url_signed = self.build_secure_url(image.url_signed_blob_path, expiration_offset = self.s3_expiration_offset)
 
         if hasattr(image, 'url_signed_thumb_blob_path') and image.url_signed_thumb_blob_path:
             image.url_signed_thumb = self.build_secure_url(image.url_signed_thumb_blob_path,
-                                                           expiration_offset = 2592000)
+                                                           expiration_offset = self.s3_expiration_offset)
         session.add(image)
 
     ############################################################  AI / ML FUNCTIONS ##############################################

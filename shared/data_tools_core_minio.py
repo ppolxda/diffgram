@@ -38,3 +38,21 @@ class DataToolsMinio(DataToolsS3):
                                         verify=settings.DIFFGRAM_MINIO_DISABLED_SSL_VERIFY)
         self.s3_bucket_name = settings.DIFFGRAM_S3_BUCKET_NAME
         self.s3_bucket_name_ml = settings.ML__DIFFGRAM_S3_BUCKET_NAME
+        self.s3_expiration_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
+
+    def build_secure_url(self, blob_name: str, expiration_offset: int = None, bucket: str = "web"):
+        """
+            Builds a presigned URL to access the given blob path.
+        :param blob_name: The path to the blob for the presigned URL
+        :param expiration_offset: The expiration time for the presigned URL
+        :param bucket: string for the bucket type (either 'web' or 'ml') defaults to 'web'
+        :return: the string for the presigned url
+        """
+        # Minio Expiry time is less than 7 days
+        if expiration_offset is None:
+            expiration_offset = 604800
+
+        if expiration_offset and expiration_offset > 604800:
+            raise ValueError('Minio Expiry time is less than 7 days')
+
+        return super().build_secure_url(blob_name, expiration_offset, bucket)

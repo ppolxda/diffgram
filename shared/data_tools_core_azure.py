@@ -24,6 +24,7 @@ class DataToolsAzure:
     def __init__(self):
         self.azure_service_client = BlobServiceClient.from_connection_string(settings.DIFFGRAM_AZURE_CONNECTION_STRING)
         self.azure_container_name = settings.DIFFGRAM_AZURE_CONTAINER_NAME
+        self.azure_expiration_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
         self.azure_container_name_ml = settings.ML__DIFFGRAM_AZURE_CONTAINER_NAME
 
     def create_resumable_upload_session(
@@ -223,7 +224,7 @@ class DataToolsAzure:
             account_key = self.azure_service_client.credential.account_key
         )
         if expiration_offset is None:
-            expiration_offset = 40368000
+            expiration_offset = self.azure_expiration_offset
 
         added_seconds = datetime.timedelta(0, expiration_offset)
         expiry_time = datetime.datetime.utcnow() + added_seconds
@@ -265,13 +266,13 @@ class DataToolsAzure:
         :param image: the Diffgram Image() object
         :return: None
         """
-        image.url_signed_expiry = int(time.time() + 2592000)
+        image.url_signed_expiry = int(time.time() + self.azure_expiration_offset)
 
-        image.url_signed = self.build_secure_url(image.url_signed_blob_path, expiration_offset = 2592000)
+        image.url_signed = self.build_secure_url(image.url_signed_blob_path, expiration_offset = self.azure_expiration_offset)
 
         if hasattr(image, 'url_signed_thumb_blob_path') and image.url_signed_thumb_blob_path:
             image.url_signed_thumb = self.build_secure_url(image.url_signed_thumb_blob_path,
-                                                           expiration_offset = 2592000)
+                                                           expiration_offset = self.azure_expiration_offset)
         session.add(image)
 
     ############################################################  AI / ML FUNCTIONS ##############################################

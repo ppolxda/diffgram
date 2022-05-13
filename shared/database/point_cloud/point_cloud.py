@@ -72,8 +72,8 @@ class PointCloud(Base):
 
             # We assume a significant delta between minimum days
             # and new offset (ie at least 10 minutes)
-            minimum_days_valid = 30 * 12  # this should always be lower then new offset
-            new_offset_days_valid = 30 * 14
+            minimum_days_valid = settings.DIFFGRAM_S3_MINIMUM_DAYS_VALID  # this should always be lower then new offset
+            new_offset_days_valid = settings.DIFFGRAM_S3_NEW_OFFSET_DAYS_VALID
             time_to_check = time.time() + (86400 * minimum_days_valid)
             signed_expiry = self.url_signed_expiry
             if signed_expiry is not None:

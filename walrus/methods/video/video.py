@@ -85,7 +85,7 @@ class New_video():
             timeout = 60 * 10
         )
 
-        video.file_signed_url = data_tools.build_secure_url(video.file_blob_path, 2592000)
+        video.file_signed_url = data_tools.build_secure_url(video.file_blob_path, settings.DIFFGRAM_S3_EXPIRATION_OFFSET)
 
     def check_free_tier_frame_count(self, frame_count):
 

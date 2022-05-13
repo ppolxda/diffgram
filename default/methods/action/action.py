@@ -11,6 +11,7 @@ import tempfile
 import os
 from werkzeug.utils import secure_filename
 from shared.image_tools import imresize
+from shared.settings import settings
 from imageio import imwrite
 
 
@@ -687,13 +688,14 @@ def process_image_for_overlay(
     new_image.height = image.shape[0]
     new_image.width = image.shape[1]
 
+    blob_expiry_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
     data_tools = Data_tools().data_tools
 
     data_tools.upload_to_cloud_storage(temp_local_path = new_temp_filename,
                                        blob_path = image_blob,
                                        content_type = "image/" + str(extension))
 
-    signed_url = data_tools.build_secure_url(blob_name = image_blob, expiration_offset = 45920000)
+    signed_url = data_tools.build_secure_url(blob_name = image_blob, expiration_offset = blob_expiry_offset)
 
     # Save Thumb
     thumbnail_image = imresize(image, (80, 80))
@@ -704,7 +706,7 @@ def process_image_for_overlay(
                                        blob_path = image_blob_thumb,
                                        content_type = "image/" + str(extension))
 
-    signed_url_thumb = data_tools.build_secure_url(blob_name = image_blob_thumb, expiration_offset = 45920000)
+    signed_url_thumb = data_tools.build_secure_url(blob_name = image_blob_thumb, expiration_offset = blob_expiry_offset)
 
     session.add(new_image)
 
@@ -717,6 +719,6 @@ def process_image_for_overlay(
     new_image.url_signed_thumb = signed_url_thumb
     new_image.url_signed_thumb_blob_path = image_blob_thumb
 
-    new_image.url_signed_expiry = int(time.time() + 45920000)
+    new_image.url_signed_expiry = int(time.time() + blob_expiry_offset)
 
     return new_image

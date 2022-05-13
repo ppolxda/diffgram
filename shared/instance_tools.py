@@ -123,6 +123,6 @@ class Instance_tools():
 
 		instance.preview_image_url = data_tools.build_secure_url(
 			blob_name = instance.preview_image_blob_dir,
-			expiration_offset = 2592000
+			expiration_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
 		)
 		session.add(instance)

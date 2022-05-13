@@ -31,6 +31,7 @@ class DataToolsGCP:
 
             # Careful this is the main bucket for web which is different from ML bucket
             self.bucket = self.gcs.get_bucket(settings.CLOUD_STORAGE_BUCKET)
+            self.expiration_offset = settings.DIFFGRAM_S3_EXPIRATION_OFFSET
 
             self.ML_bucket = self.gcs.get_bucket(settings.ML__CLOUD_STORAGE_BUCKET)
         except Exception as exception:
@@ -232,7 +233,8 @@ class DataToolsGCP:
         :return: the string for the presigned url
         """
         if expiration_offset is None:
-            expiration_offset = 40368000
+            expiration_offset = self.expiration_offset
+
         expiration_time = int(time.time() + expiration_offset)
 
         if bucket == "web":
@@ -268,7 +270,7 @@ class DataToolsGCP:
         :return: None
         """
 
-        image.url_signed_expiry = int(time.time() + 2592000)
+        image.url_signed_expiry = int(time.time() + self.expiration_offset)
 
         blob = self.bucket.blob(image.url_signed_blob_path)
         image.url_signed = blob.generate_signed_url(expiration = image.url_signed_expiry)
@@ -286,7 +288,7 @@ class DataToolsGCP:
 
     def build_secure_url_inference(self, session, ai, inference):
 
-        inference.url_signed_expiry = int(time.time() + 2592000)  # 1 month
+        inference.url_signed_expiry = int(time.time() + self.expiration_offset)
 
         dir = f"{ai.ml.blob_dir}/out/{str(inference.image.id)}"
 
